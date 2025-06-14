@@ -229,6 +229,11 @@ td {
   white-space: pre-line;  /* preserve line breaks */
 }
 
+.my-message {
+  border-left: 4px solid #2196f3;  /* Blue */
+  background-color: #f3f8ff;
+}
+
 /* Mobile devices */
 @media only screen and (max-width: 420px) {
   .main {
