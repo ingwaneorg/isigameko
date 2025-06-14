@@ -375,6 +375,44 @@ td {
   padding: 10px;  /* optional for breathing room */
 }
 
+/* Message styling for incident response app */
+.message-container {
+  margin-bottom: 15px; 
+  padding: 12px; 
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.team-message {
+  border-left: 4px solid #4ecdc4;
+  background-color: #f0fffe;
+}
+
+.system-message {
+  border-left: 4px solid #ff6b6b;
+  background-color: #fff5f5;
+}
+
+.message-header {
+  font-weight: bold; 
+  font-size: 0.9em; 
+  margin-bottom: 6px;
+}
+
+.team-message .message-header {
+  color: #4ecdc4;
+}
+
+.system-message .message-header {
+  color: #ff6b6b;
+}
+
+.message-text {
+  line-height: 1.4; 
+  color: #333;
+}
+
 /* Mobile devices */
 @media only screen and (max-width: 420px) {
   .main {
