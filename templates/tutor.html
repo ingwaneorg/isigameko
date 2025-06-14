@@ -1,0 +1,180 @@
+<!-- templates/tutor.html -->
+{% extends "base.html" %}
+
+{% block title %}Tutor - {{ room.code }}{% endblock %}
+
+{% block content %}
+<div class="main tutor">
+  <div class="panel">
+    <div class="section">
+      <div class="row">
+        <h1>{{ room.description or 'Room ' + room.code }}</h1>
+      </div>
+      <div class="row2 url">
+        <span class="url">{{ request.url_root }}{{ room.code }}</span>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-gap"></div>
+      <div class="row">
+        <h2>Inject Incident Update</h2>
+      </div>
+      <div class="row">
+        <textarea id="inject-message" 
+                  placeholder="Type incident update to send to all teams..." 
+                  maxlength="500" 
+                  rows="3"
+                  style="width: 100%; resize: vertical;"></textarea>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <button id="inject-button" onclick="injectMessage()" class="button1">Send Update</button>
+        <span class="col-gap"></span>
+        <button onclick="refreshMessages()" class="button2">Refresh</button>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <div id="inject-status" class="time-message">&nbsp;</div>
+        <div id="inject-error" class="failed" style="display: none;">
+          Failed to send update
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-gap"></div>
+      <div class="row">
+        <h2>Team Messages (<span id="message-count">0</span>)</h2>
+      </div>
+      <div class="row">
+        <button class="button2" onclick="clearMessages()">Clear All Messages</button>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div id="messages-container">
+        <!-- Messages will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const roomCode = '{{ room.code }}';
+
+function injectMessage() {
+    const messageText = document.getElementById('inject-message').value.trim();
+    
+    if (!messageText) {
+        document.getElementById('inject-error').textContent = 'Please enter a message';
+        document.getElementById('inject-error').style.display = 'block';
+        return;
+    }
+    
+    // Clear previous messages
+    document.getElementById('inject-error').style.display = 'none';
+    document.getElementById('inject-button').disabled = true;
+    document.getElementById('inject-button').textContent = 'Sending...';
+    
+    fetch(`/${roomCode}/inject-message`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: messageText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('inject-message').value = '';
+            document.getElementById('inject-status').textContent = 
+                `Update sent at ${new Date().toLocaleTimeString()}`;
+            refreshMessages();
+        } else {
+            document.getElementById('inject-error').textContent = data.error || 'Failed to send update';
+            document.getElementById('inject-error').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        document.getElementById('inject-error').textContent = 'Network error - try again';
+        document.getElementById('inject-error').style.display = 'block';
+    })
+    .finally(() => {
+        document.getElementById('inject-button').disabled = false;
+        document.getElementById('inject-button').textContent = 'Send Update';
+    });
+}
+
+function clearMessages() {
+    if (!confirm('Clear all messages? This cannot be undone.')) {
+        return;
+    }
+    
+    fetch(`/${roomCode}/clear-messages`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            refreshMessages();
+        }
+    })
+    .catch(error => {
+        console.error('Error clearing messages:', error);
+    });
+}
+
+function refreshMessages() {
+    fetch(`/${roomCode}/get-messages`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayMessages(data.messages);
+            document.getElementById('message-count').textContent = data.messages.length;
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching messages:', error);
+    });
+}
+
+function displayMessages(messages) {
+    const container = document.getElementById('messages-container');
+    
+    if (messages.length === 0) {
+        container.innerHTML = '<div class="row">No messages yet</div>';
+        return;
+    }
+    
+    let html = '';
+    messages.forEach(message => {
+        const timestamp = new Date(message.timestamp).toLocaleTimeString();
+        const isSystemMessage = message.team_id === 'SYSTEM';
+        const messageClass = isSystemMessage ? 'system-message' : 'team-message';
+        
+        html += `
+            <div class="row ${messageClass}" style="margin-bottom: 15px; padding: 12px; border-left: 4px solid ${isSystemMessage ? '#ff6b6b' : '#4ecdc4'}; background-color: ${isSystemMessage ? '#fff5f5' : '#f0fffe'};">
+                <div style="font-weight: bold; font-size: 0.9em; color: ${isSystemMessage ? '#ff6b6b' : '#4ecdc4'};">
+                    ${message.team_name} - ${timestamp}
+                </div>
+                <div style="margin-top: 8px; line-height: 1.4;">
+                    ${message.message}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Load messages on page load
+document.addEventListener('DOMContentLoaded', function() {
+    refreshMessages();
+});
+</script>
+{% endblock %}
