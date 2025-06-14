@@ -1,0 +1,177 @@
+<!-- templates/team.html -->
+{% extends "base.html" %}
+
+{% block title %}
+    {% if team_name %}
+        {{ team_name }} - {{ room.code }}
+    {% else %}
+        Team - {{ room.code }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="main learner">
+  <div class="panel">
+    <div class="section">
+      <div class="row">
+        <h1>{{ room.description or 'Room ' + room.code }}</h1>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <input type="text" 
+               id="team-name"
+               pattern="[\-A-Za-z0-9 .]+" 
+               title="Only letters, numbers, spaces, dots, and hyphens are allowed (max 30)"
+               value="{{ team_name }}"
+               placeholder="Team name (e.g. Team Alpha)" 
+               maxlength="30" 
+               autocomplete="off">
+      </div>
+    </div>
+    
+    <div class="section-gap"></div>
+    
+    <div class="section">
+      <div class="row">
+        <textarea id="message-input" 
+                  placeholder="Type your incident update here..." 
+                  maxlength="500" 
+                  rows="4"
+                  style="width: 100%; resize: vertical;"></textarea>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <button id="send-button" onclick="sendMessage()" class="button1">Send Message</button>
+        <span class="col-gap"></span>
+        <button onclick="refreshMessages()" class="button2">Refresh</button>
+      </div>
+      <div class="row-gap"></div>
+      <div class="row">
+        <div id="status-message" class="time-message">&nbsp;</div>
+        <div id="error-message" class="failed" style="display: none;">
+          Failed to send message - try again
+        </div>
+      </div>
+    </div>
+
+    <div class="section-gap"></div>
+    
+    <div class="section">
+      <div class="row">
+        <h2>Messages</h2>
+      </div>
+      <div id="messages-container">
+        <!-- Messages will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const roomCode = '{{ room.code }}';
+
+function sendMessage() {
+    const teamName = document.getElementById('team-name').value.trim();
+    const messageText = document.getElementById('message-input').value.trim();
+    
+    if (!messageText) {
+        document.getElementById('error-message').textContent = 'Please enter a message';
+        document.getElementById('error-message').style.display = 'block';
+        return;
+    }
+    
+    // Clear previous messages
+    document.getElementById('error-message').style.display = 'none';
+    document.getElementById('send-button').disabled = true;
+    document.getElementById('send-button').textContent = 'Sending...';
+    
+    fetch(`/${roomCode}/send-message`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: messageText,
+            team_name: teamName
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('message-input').value = '';
+            document.getElementById('status-message').textContent = 
+                `Message sent at ${new Date().toLocaleTimeString()}`;
+            refreshMessages();
+        } else {
+            document.getElementById('error-message').textContent = data.error || 'Failed to send message';
+            document.getElementById('error-message').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        document.getElementById('error-message').textContent = 'Network error - try again';
+        document.getElementById('error-message').style.display = 'block';
+    })
+    .finally(() => {
+        document.getElementById('send-button').disabled = false;
+        document.getElementById('send-button').textContent = 'Send Message';
+    });
+}
+
+function refreshMessages() {
+    fetch(`/${roomCode}/get-messages`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayMessages(data.messages);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching messages:', error);
+    });
+}
+
+function displayMessages(messages) {
+    const container = document.getElementById('messages-container');
+    
+    if (messages.length === 0) {
+        container.innerHTML = '<div class="row">No messages yet</div>';
+        return;
+    }
+    
+    let html = '';
+    messages.forEach(message => {
+        const timestamp = new Date(message.timestamp).toLocaleTimeString();
+        const isSystemMessage = message.team_id === 'SYSTEM';
+        const messageClass = isSystemMessage ? 'system-message' : 'team-message';
+        
+        html += `
+            <div class="row ${messageClass}" style="margin-bottom: 10px; padding: 10px; border-left: 3px solid ${isSystemMessage ? '#ff6b6b' : '#4ecdc4'};">
+                <div style="font-weight: bold; font-size: 0.9em; color: ${isSystemMessage ? '#ff6b6b' : '#4ecdc4'};">
+                    ${message.team_name} - ${timestamp}
+                </div>
+                <div style="margin-top: 5px;">
+                    ${message.message}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Handle Enter key in message input
+document.getElementById('message-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
+});
+
+// Load messages on page load
+document.addEventListener('DOMContentLoaded', function() {
+    refreshMessages();
+});
+</script>
+{% endblock %}
