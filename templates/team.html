@@ -141,6 +141,7 @@ function displayMessages(messages) {
     }
     
     let html = '';
+    messages.reverse();    
     messages.forEach(message => {
         const timestamp = new Date(message.timestamp).toLocaleTimeString();
         const isSystemMessage = message.team_id === 'SYSTEM';

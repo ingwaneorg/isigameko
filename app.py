@@ -3,6 +3,7 @@ import uuid
 import re
 import os
 import json
+import html
 from datetime import datetime
 
 app = Flask(__name__)
@@ -87,7 +88,7 @@ def tutor_page(room_code):
 
         rooms[room_code] = {
             'code': room_code,
-            'description': f'Incident Response Room {room_code}',
+            'description': f'Team {room_code}',
             'messages': [],
             'createdDate': datetime.now().isoformat()
         }
@@ -113,8 +114,8 @@ def send_message(room_code):
         return jsonify({'success': False, 'error': 'Room not found'})
     
     data = request.get_json()
-    message_text = data.get('message', '').strip()
-    team_name = data.get('team_name', '').strip()
+    message_text = html.escape(data.get('message', '').strip())
+    team_name = html.escape(data.get('team_name', '').strip())
     
     # Validate inputs
     if not message_text:
