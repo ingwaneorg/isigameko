@@ -122,6 +122,16 @@ button.button3 {
   text-align: center;
 }
 
+.row4 {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: left;
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 5px;
+}
+
 div.status {
   font-size: 6rem;
   display: flex;
@@ -216,6 +226,7 @@ td {
 .message-text {
   line-height: 1.4; 
   color: #333;
+  white-space: pre-line;  /* preserve line breaks */
 }
 
 /* Mobile devices */

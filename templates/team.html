@@ -39,6 +39,10 @@
                   rows="4"
                   style="width: 100%; resize: vertical;"></textarea>
       </div>
+      <div class="row4">
+        Press Enter to send, Shift+Enter for new line
+      </div>
+
       <div class="row-gap"></div>
       <div class="row">
         <button id="send-button" onclick="sendMessage()" class="button1">Send Message</button>
@@ -152,9 +156,7 @@ function displayMessages(messages) {
                 <div class="message-header">
                     ${message.learner_name} - ${timestamp}
                 </div>
-                <div class="message-text">
-                    ${message.message}
-                </div>
+                <div class="message-text">${message.message}</div>
             </div>
         `;
     });
