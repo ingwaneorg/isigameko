@@ -74,8 +74,11 @@ const roomCode = '{{ room.code }}';
 function sendMessage() {
     const learnerName = document.getElementById('learner-name').value.trim();
     const messageText = document.getElementById('message-input').value.trim();
-    
+
+    // clear previous status
+
     if (!messageText) {
+        document.getElementById('status-message').textContent = '';    
         document.getElementById('error-message').textContent = 'Please enter a message';
         document.getElementById('error-message').style.display = 'block';
         return;

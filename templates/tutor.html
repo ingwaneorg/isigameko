@@ -73,6 +73,7 @@ function injectMessage() {
     const messageText = document.getElementById('inject-message').value.trim();
     
     if (!messageText) {
+        document.getElementById('inject-status').textContent = '';    
         document.getElementById('inject-error').textContent = 'Please enter a message';
         document.getElementById('inject-error').style.display = 'block';
         return;
