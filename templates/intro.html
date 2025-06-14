@@ -1,0 +1,49 @@
+<!-- templates/intro.html -->
+{% extends "base.html" %}
+{% block content %}
+<form name="form" method="POST" action="/join">
+  <div class="main intro">
+    <div class="panel">
+      <div class="section">
+        <div class="row3">
+          <h1>Incident Response</h1>
+        </div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="section">
+        <div class="row">
+          <input type="text" 
+                 name="room_code"
+                 placeholder="Room Code" 
+                 autocomplete="off" 
+                 style="text-transform:uppercase" 
+                 minlength="4" 
+                 maxlength="10" 
+                 onkeypress="return /[A-Z0-9]/i.test(event.key)" 
+                 required>
+        </div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="section">
+        <div class="row">
+          <button type="submit" name="role" value="team" class="button1">I'm on a team</button>
+          <span class="col-gap"></span>
+          <button type="submit" name="role" value="tutor" class="button2">I'm the tutor</button>
+        </div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="section">
+        <div class="row3">
+          <div>Tutor - create a unique room code for your incident response exercise</div>
+        </div>
+      </div>
+      <div class="section-gap"></div>
+      <div class="section">
+        <div class="row">
+          <a href="/about">About this app</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
