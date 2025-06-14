@@ -2,8 +2,8 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {% if team_name %}
-        {{ team_name }}
+    {% if learner_name %}
+        {{ learner_name }}
     {% else %}
         Team - {{ room.code }}
     {% endif %}
@@ -19,11 +19,11 @@
       <div class="row-gap"></div>
       <div class="row">
         <input type="text" 
-               id="team-name"
+               id="learner-name"
                pattern="[\-A-Za-z0-9 .]+" 
                title="Only letters, numbers, spaces, dots, and hyphens are allowed (max 30)"
-               value="{{ team_name }}"
-               placeholder="Team name (e.g. Team Alpha)" 
+               value="{{ learner_name }}"
+               placeholder="Your name and role ~ e.g. Dave (Tech Lead)" 
                maxlength="30" 
                autocomplete="off">
       </div>
@@ -73,7 +73,7 @@
 const roomCode = '{{ room.code }}';
 
 function sendMessage() {
-    const teamName = document.getElementById('team-name').value.trim();
+    const learnerName = document.getElementById('learner-name').value.trim();
     const messageText = document.getElementById('message-input').value.trim();
     
     if (!messageText) {
@@ -94,7 +94,7 @@ function sendMessage() {
         },
         body: JSON.stringify({
             message: messageText,
-            team_name: teamName
+            learner_name: learnerName
         })
     })
     .then(response => response.json())
@@ -144,13 +144,13 @@ function displayMessages(messages) {
     messages.reverse();    
     messages.forEach(message => {
         const timestamp = new Date(message.timestamp).toLocaleTimeString();
-        const isSystemMessage = message.team_id === 'SYSTEM';
+        const isSystemMessage = message.learner_id === 'SYSTEM';
         const messageClass = isSystemMessage ? 'system-message' : 'team-message';
         
         html += `
             <div class="message-container ${messageClass}">
                 <div class="message-header">
-                    ${message.team_name} - ${timestamp}
+                    ${message.learner_name} - ${timestamp}
                 </div>
                 <div class="message-text">
                     ${message.message}

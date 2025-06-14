@@ -20,12 +20,12 @@ def validate_room_code(room_code):
     """Validate room code: only letters, numbers, hyphens, 2-10 characters"""
     return bool(re.match(r'^[A-Za-z0-9-]{2,10}$', room_code))
 
-def get_team_id():
-    """Get or create team ID for this session"""
-    if 'team_id' not in session:
-        team_uuid = str(uuid.uuid4())
-        session['team_id'] = team_uuid
-    return session['team_id']
+def get_learner_id():
+    """Get or create learner ID for this session"""
+    if 'learner_id' not in session:
+        learner_uuid = str(uuid.uuid4())
+        session['learner_id'] = learner_uuid
+    return session['learner_id']
 
 @app.route('/')
 def intro():
@@ -59,15 +59,15 @@ def team_page(room_code):
     if room_code not in rooms:
         return "Room not found", 404
 
-    team_id = get_team_id()
+    learner_id = get_learner_id()
     
-    # Get team name if they've set one
-    team_name = session.get('team_name', '')
+    # Get learner name if they've set one
+    learner_name = session.get('learner_name', '')
     
     return render_template('team.html', 
                          room=rooms[room_code], 
-                         team_id=team_id,
-                         team_name=team_name)
+                         learner_id=learner_id,
+                         learner_name=learner_name)
 
 @app.route('/<room_code>/tutor')
 def tutor_page(room_code):
@@ -105,7 +105,7 @@ def save_db_json():
 @app.route('/<room_code>/send-message', methods=['POST'])
 def send_message(room_code):
     room_code = room_code.upper()
-    team_id = get_team_id()
+    learner_id = get_learner_id()
     
     if not validate_room_code(room_code):
         return jsonify({'success': False, 'error': 'Invalid room code'})
@@ -115,7 +115,7 @@ def send_message(room_code):
     
     data = request.get_json()
     message_text = html.escape(data.get('message', '').strip())
-    team_name = html.escape(data.get('team_name', '').strip())
+    learner_name = html.escape(data.get('learner_name', '').strip())
     
     # Validate inputs
     if not message_text:
@@ -124,22 +124,22 @@ def send_message(room_code):
     if len(message_text) > 500:  # Limit message length
         return jsonify({'success': False, 'error': 'Message too long (max 500 characters)'})
     
-    if len(team_name) > 30:  # Limit team name length
-        return jsonify({'success': False, 'error': 'Team name too long (max 30 characters)'})
+    if len(learner_name) > 30:  # Limit learner name length
+        return jsonify({'success': False, 'error': 'Name too long (max 30 characters)'})
     
     # Check message limit
     if len(rooms[room_code]['messages']) >= MAX_MESSAGES_PER_ROOM:
         return jsonify({'success': False, 'error': 'Room message limit reached'})
     
-    # Store team name in session
-    if team_name:
-        session['team_name'] = team_name
+    # Store learner name in session
+    if learner_name:
+        session['learner_name'] = learner_name
     
     # Create message
     message = {
         'id': str(uuid.uuid4()),
-        'team_id': team_id,
-        'team_name': team_name or 'Anonymous Team',
+        'learner_id': learner_id,
+        'learner_name': learner_name or 'Anonymous',
         'message': message_text,
         'timestamp': datetime.now().isoformat()
     }
@@ -204,8 +204,8 @@ def inject_message(room_code):
     # Create system message
     message = {
         'id': str(uuid.uuid4()),
-        'team_id': 'SYSTEM',
-        'team_name': '🚨 INCIDENT UPDATE',
+        'learner_id': 'SYSTEM',
+        'learner_name': '🚨 INCIDENT UPDATE',
         'message': message_text,
         'timestamp': datetime.now().isoformat()
     }

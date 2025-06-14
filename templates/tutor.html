@@ -158,13 +158,13 @@ function displayMessages(messages) {
     messages.reverse();    
     messages.forEach(message => {
         const timestamp = new Date(message.timestamp).toLocaleTimeString();
-        const isSystemMessage = message.team_id === 'SYSTEM';
+        const isSystemMessage = message.learner_id === 'SYSTEM';
         const messageClass = isSystemMessage ? 'system-message' : 'team-message';
         
         html += `
             <div class="message-container ${messageClass}">
                 <div class="message-header">
-                    ${message.team_name} - ${timestamp}
+                    ${message.learner_name} - ${timestamp}
                 </div>
                 <div class="message-text">
                     ${message.message}
