@@ -79,7 +79,7 @@ def tutor_page(room_code):
         
     room_code = room_code.upper()
     
-    # Initialize room if it doesn't exist
+    # Initialise room if it doesn't exist
     if room_code not in rooms:
         # Limit number of rooms
         if len(rooms) >= MAX_ROOMS:
@@ -89,7 +89,7 @@ def tutor_page(room_code):
             'code': room_code,
             'description': f'Incident Response Room {room_code}',
             'messages': [],
-            'createdDate': datetime.now().isoformat() + 'Z'
+            'createdDate': datetime.now().isoformat()
         }
     
     return render_template('tutor.html', 
@@ -140,7 +140,7 @@ def send_message(room_code):
         'team_id': team_id,
         'team_name': team_name or 'Anonymous Team',
         'message': message_text,
-        'timestamp': datetime.now().isoformat() + 'Z'
+        'timestamp': datetime.now().isoformat()
     }
     
     # Add to room
@@ -206,7 +206,7 @@ def inject_message(room_code):
         'team_id': 'SYSTEM',
         'team_name': '🚨 INCIDENT UPDATE',
         'message': message_text,
-        'timestamp': datetime.now().isoformat() + 'Z'
+        'timestamp': datetime.now().isoformat()
     }
     
     rooms[room_code]['messages'].append(message)
