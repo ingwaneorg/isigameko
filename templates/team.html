@@ -3,7 +3,7 @@
 
 {% block title %}
     {% if team_name %}
-        {{ team_name }} - {{ room.code }}
+        {{ team_name }}
     {% else %}
         Team - {{ room.code }}
     {% endif %}
@@ -147,11 +147,11 @@ function displayMessages(messages) {
         const messageClass = isSystemMessage ? 'system-message' : 'team-message';
         
         html += `
-            <div class="row ${messageClass}" style="margin-bottom: 10px; padding: 10px; border-left: 3px solid ${isSystemMessage ? '#ff6b6b' : '#4ecdc4'};">
-                <div style="font-weight: bold; font-size: 0.9em; color: ${isSystemMessage ? '#ff6b6b' : '#4ecdc4'};">
+            <div class="message-container ${messageClass}">
+                <div class="message-header">
                     ${message.team_name} - ${timestamp}
                 </div>
-                <div style="margin-top: 5px;">
+                <div class="message-text">
                     ${message.message}
                 </div>
             </div>
