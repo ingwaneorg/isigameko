@@ -8,7 +8,7 @@
   <div class="panel">
     <div class="section">
       <div class="row">
-        <h1>{{ room.description or 'Room ' + room.code }}</h1>
+        <h1>{{ room.description or room.code }}</h1>
       </div>
       <div class="row2 url">
         <span class="url">{{ request.url_root }}{{ room.code }}</span>
@@ -33,7 +33,6 @@
         <span class="col-gap"></span>
         <button onclick="refreshMessages()" class="button2">Refresh</button>
       </div>
-      <div class="row-gap"></div>
       <div class="row">
         <div id="inject-status" class="time-message">&nbsp;</div>
         <div id="inject-error" class="failed" style="display: none;">
@@ -43,12 +42,8 @@
     </div>
 
     <div class="section">
-      <div class="section-gap"></div>
       <div class="row">
         <h2>Team Messages (<span id="message-count">0</span>)</h2>
-      </div>
-      <div class="row">
-        <button class="button2" onclick="clearMessages()">Clear All Messages</button>
       </div>
     </div>
     
@@ -57,6 +52,14 @@
         <!-- Messages will be loaded here -->
       </div>
     </div>
+
+    <div class="section">
+      <div class="row-gap"></div>
+      <div class="row">
+        <button class="button3" onclick="clearMessages()">Clear All Messages</button>
+      </div>
+    </div>
+    
   </div>
 </div>
 {% endblock %}
@@ -151,16 +154,26 @@ function displayMessages(messages) {
         return;
     }
     
+    // Get first message timestamp as baseline (before reversing)
+    const firstMessageTime = new Date(messages[0].timestamp);
+    
     let html = '';
+    messages.reverse();    
     messages.forEach(message => {
         const timestamp = new Date(message.timestamp).toLocaleTimeString();
-        const isSystemMessage = message.team_id === 'SYSTEM';
+        const messageTime = new Date(message.timestamp);
+        const isSystemMessage = message.learner_id === 'SYSTEM';
         const messageClass = isSystemMessage ? 'system-message' : 'team-message';
+        
+        // Calculate minutes since first message
+        const minutesSinceFirst = Math.floor((messageTime - firstMessageTime) / (1000 * 60));
+        const timingSuffix = minutesSinceFirst === 0 ? '-' : `+${minutesSinceFirst}m`;
         
         html += `
             <div class="message-container ${messageClass}">
-                <div class="message-header">
-                    ${message.team_name} - ${timestamp}
+                <div class="message-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>${message.learner_name} - ${timestamp}</span>
+                    <span style="color: #999; font-size: 0.8em; font-weight: normal;">${timingSuffix}</span>
                 </div>
                 <div class="message-text">
                     ${message.message}
