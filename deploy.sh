@@ -8,11 +8,11 @@ set -e  # Exit on any error
 # ============================================================================
 # CONFIGURATION - Update these for each project
 # ============================================================================
-PROJECT_ID="ingwane-isigameko"
-SERVICE_NAME="isigameko" 
-REGION="us-east1"
+PROJECT_ID="ingwane-imikhaza"
+SERVICE_NAME="imikhaza" 
 
-SERVICE_ACCOUNT_KEY="${HOME}/.gcp-keys/${PROJECT_ID}-key.json"
+SERVICE_ACCOUNT_KEY="$HOME/.gcp-keys/ingwane-imikhaza-key.json"
+REGION="us-east1"
 
 # ============================================================================
 # DEPLOYMENT SCRIPT - No changes needed below
@@ -38,14 +38,6 @@ print_error() {
 
 # Validate prerequisites
 print_status "Validating prerequisites..."
-
-# SECRET KEY
-filename="$HOME/.flask_secret_key"
-if [ ! -f ${filename} ]; then
-    print_error "Required file '$filename' not found!"
-    exit 1
-fi
-SECRET_KEY=$(head -n 1 $filename)
 
 # Check required files exist
 required_files=("app.py" "requirements.txt")
@@ -90,7 +82,7 @@ if gcloud run deploy "$SERVICE_NAME" \
     --max-instances 1 \
     --memory 512Mi \
     --timeout 300 \
-    --set-env-vars SECRET_KEY="$SECRET_KEY" \
+    --set-env-vars SECRET_KEY="your-production-secret-key-here" \
     --quiet; then
     
     print_success "Deployment completed successfully!"
