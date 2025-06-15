@@ -1,5 +1,8 @@
 # This project
-db.json
+last_deployment_url.txt
+logs/*
+*.json
+bin/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
