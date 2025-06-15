@@ -68,8 +68,27 @@ fi
 
 # Authenticate with Google Cloud
 print_status "Authenticating with Google Cloud..."
-gcloud auth activate-service-account ${SERVICE_ACCOUNT_NAME} --key-file="${SERVICE_ACCOUNT_KEY}"
+gcloud auth activate-service-account "${SERVICE_ACCOUNT_NAME}" --key-file="${SERVICE_ACCOUNT_KEY}"
+
+# Set project and region
 gcloud config set project "${PROJECT_ID}"
+gcloud config set run/region "${REGION}"
+
+# Verify correct account and project are active
+CURRENT_ACCOUNT=$(gcloud config get-value account)
+CURRENT_PROJECT=$(gcloud config get-value project)
+
+if [[ "$CURRENT_ACCOUNT" != "$SERVICE_ACCOUNT_NAME" ]]; then
+    print_error "Wrong active account: $CURRENT_ACCOUNT"
+    print_error "Expected: $SERVICE_ACCOUNT_NAME"
+    exit 1
+fi
+if [[ "$CURRENT_PROJECT" != "$PROJECT_ID" ]]; then
+    print_error "Wrong project set: $CURRENT_PROJECT"
+    print_error "Expected: $PROJECT_ID"
+    exit 1
+fi
+print_success "Confirmed correct account and project are active"
 
 # Verify project exists and is accessible
 if ! gcloud projects describe "${PROJECT_ID}" &>/dev/null; then
@@ -88,6 +107,7 @@ if gcloud run deploy "${SERVICE_NAME}" \
     --platform managed \
     --region "${REGION}" \
     --allow-unauthenticated \
+    --service-account "${SERVICE_ACCOUNT_NAME}" \
     --max-instances 1 \
     --memory 512Mi \
     --timeout 300 \
