@@ -10,7 +10,6 @@ set -e  # Exit on any error
 # ============================================================================
 PROJECT_ID="ingwane-imikhaza"
 SERVICE_NAME="imikhaza" 
-
 SERVICE_ACCOUNT_KEY="$HOME/.gcp-keys/ingwane-imikhaza-key.json"
 REGION="us-east1"
 
