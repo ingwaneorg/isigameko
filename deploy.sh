@@ -9,15 +9,14 @@ set -e  # Exit on any error
 # CONFIGURATION - Update these for each project
 # ============================================================================
 PROJECT_ID="ingwane-isigameko"
-SERVICE_NAME="isigameko"
+SERVICE_NAME="isigameko" 
 REGION="us-east1"
-SERVICE_ACCOUNT_PREFIX="flask-deployer"
+
+SERVICE_ACCOUNT_KEY="${HOME}/.gcp-keys/${PROJECT_ID}-key.json"
 
 # ============================================================================
 # DEPLOYMENT SCRIPT - No changes needed below
 # ============================================================================
-SERVICE_ACCOUNT_KEY="${HOME}/.gcp-keys/${PROJECT_ID}-key.json"
-SERVICE_ACCOUNT_NAME="${SERVICE_ACCOUNT_PREFIX}@${PROJECT_ID}.iam.gserviceaccount.com"
 
 # Colours
 RED='\033[0;31m'
@@ -60,39 +59,20 @@ done
 print_success "All required files found"
 
 # Check service account key exists
-if [ ! -f "${SERVICE_ACCOUNT_KEY}" ]; then
-    print_error "Service account key not found: ${SERVICE_ACCOUNT_KEY}"
+if [ ! -f "$SERVICE_ACCOUNT_KEY" ]; then
+    print_error "Service account key not found: $SERVICE_ACCOUNT_KEY"
     print_error "Please ensure the service account key exists"
     exit 1
 fi
 
 # Authenticate with Google Cloud
 print_status "Authenticating with Google Cloud..."
-gcloud auth activate-service-account "${SERVICE_ACCOUNT_NAME}" --key-file="${SERVICE_ACCOUNT_KEY}"
-
-# Set project and region
-gcloud config set project "${PROJECT_ID}"
-gcloud config set run/region "${REGION}"
-
-# Verify correct account and project are active
-CURRENT_ACCOUNT=$(gcloud config get-value account)
-CURRENT_PROJECT=$(gcloud config get-value project)
-
-if [[ "$CURRENT_ACCOUNT" != "$SERVICE_ACCOUNT_NAME" ]]; then
-    print_error "Wrong active account: $CURRENT_ACCOUNT"
-    print_error "Expected: $SERVICE_ACCOUNT_NAME"
-    exit 1
-fi
-if [[ "$CURRENT_PROJECT" != "$PROJECT_ID" ]]; then
-    print_error "Wrong project set: $CURRENT_PROJECT"
-    print_error "Expected: $PROJECT_ID"
-    exit 1
-fi
-print_success "Confirmed correct account and project are active"
+gcloud auth activate-service-account --key-file="$SERVICE_ACCOUNT_KEY"
+gcloud config set project "$PROJECT_ID"
 
 # Verify project exists and is accessible
-if ! gcloud projects describe "${PROJECT_ID}" &>/dev/null; then
-    print_error "Project '${PROJECT_ID}' not found or not accessible"
+if ! gcloud projects describe "$PROJECT_ID" &>/dev/null; then
+    print_error "Project '$PROJECT_ID' not found or not accessible"
     print_error "Please verify the project exists and service account has access"
     exit 1
 fi
@@ -100,38 +80,35 @@ fi
 print_success "Authentication successful, project verified"
 
 # Deploy to Cloud Run
-print_status "Deploying '${SERVICE_NAME}' to Cloud Run..."
+print_status "Deploying '$SERVICE_NAME' to Cloud Run..."
 
-if gcloud run deploy "${SERVICE_NAME}" \
+if gcloud run deploy "$SERVICE_NAME" \
     --source . \
     --platform managed \
-    --region "${REGION}" \
+    --region "$REGION" \
     --allow-unauthenticated \
-    --service-account "${SERVICE_ACCOUNT_NAME}" \
     --max-instances 1 \
     --memory 512Mi \
     --timeout 300 \
-    --set-env-vars SECRET_KEY="${SECRET_KEY}" \
+    --set-env-vars SECRET_KEY="$SECRET_KEY" \
     --quiet; then
-
+    
     print_success "Deployment completed successfully!"
-
+    
     # Get and display service URL
-    SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" \
-        --region="${REGION}" \
+    SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
+        --region="$REGION" \
         --format="value(status.url)")
-
-    print_success "Service available at: ${SERVICE_URL}"
-
+    
+    print_success "Service available at: $SERVICE_URL"
+    
     # Save URL for reference
-    echo "${SERVICE_URL}" > last_deployment_url.txt
+    echo "$SERVICE_URL" > last_deployment_url.txt
     print_status "Service URL saved to: last_deployment_url.txt"
-
+    
 else
     print_error "Deployment failed!"
     exit 1
 fi
 
 print_success "Deployment complete!"
-
-#EOF
