@@ -8,10 +8,11 @@ set -e  # Exit on any error
 # ============================================================================
 # CONFIGURATION - Update these for each project
 # ============================================================================
-PROJECT_ID="ingwane-imikhaza"
-SERVICE_NAME="imikhaza" 
-SERVICE_ACCOUNT_KEY="$HOME/.gcp-keys/ingwane-imikhaza-key.json"
+PROJECT_ID="ingwane-isigameko"
+SERVICE_NAME="isigameko"
 REGION="us-east1"
+
+SERVICE_ACCOUNT_KEY="${HOME}/.gcp-keys/${PROJECT_ID}-key.json"
 
 # ============================================================================
 # DEPLOYMENT SCRIPT - No changes needed below
@@ -37,6 +38,14 @@ print_error() {
 
 # Validate prerequisites
 print_status "Validating prerequisites..."
+
+# SECRET KEY
+filename="$HOME/.flask_secret_key"
+if [ ! -f ${filename} ]; then
+    print_error "Required file '$filename' not found!"
+    exit 1
+fi
+SECRET_KEY=$(head -n 1 $filename)
 
 # Check required files exist
 required_files=("app.py" "requirements.txt")
@@ -81,22 +90,22 @@ if gcloud run deploy "$SERVICE_NAME" \
     --max-instances 1 \
     --memory 512Mi \
     --timeout 300 \
-    --set-env-vars SECRET_KEY="your-production-secret-key-here" \
+    --set-env-vars SECRET_KEY="$SECRET_KEY" \
     --quiet; then
-    
+
     print_success "Deployment completed successfully!"
-    
+
     # Get and display service URL
     SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
         --region="$REGION" \
         --format="value(status.url)")
-    
+
     print_success "Service available at: $SERVICE_URL"
-    
+
     # Save URL for reference
     echo "$SERVICE_URL" > last_deployment_url.txt
     print_status "Service URL saved to: last_deployment_url.txt"
-    
+
 else
     print_error "Deployment failed!"
     exit 1
