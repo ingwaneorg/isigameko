@@ -233,6 +233,46 @@ def api_rooms():
 
     return jsonify(room_summaries)
 
+@app.route('/<room_code>/admin')
+def admin_page(room_code):
+    # Block any query parameters for security
+    if request.args:
+        return "Forbidden", 403
+    
+    if not validate_room_code(room_code):
+        return "Invalid room code", 400
+        
+    room_code = room_code.upper()
+    
+    if room_code not in rooms:
+        return f"Room {room_code} not found", 404
+    
+    return render_template('admin.html', 
+                         room=rooms[room_code])
+
+@app.route('/<room_code>/delete-message/<message_id>', methods=['POST'])
+def delete_message(room_code, message_id):
+    room_code = room_code.upper()
+    
+    if not validate_room_code(room_code):
+        return jsonify({'success': False, 'error': 'Invalid room code'})
+    
+    if room_code not in rooms:
+        return jsonify({'success': False, 'error': 'Room not found'})
+    
+    # Find and remove the message
+    messages = rooms[room_code]['messages']
+    original_count = len(messages)
+    
+    # Filter out the message with matching ID
+    rooms[room_code]['messages'] = [msg for msg in messages if msg['id'] != message_id]
+    
+    # Check if message was actually deleted
+    deleted = len(rooms[room_code]['messages']) < original_count
+    
+    save_db_json()
+    return jsonify({'success': deleted, 'deleted': deleted})
+
 @app.route('/about')
 def about():
     return render_template('about.html')

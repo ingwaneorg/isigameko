@@ -1,0 +1,134 @@
+<!-- templates/admin.html -->
+{% extends "base.html" %}
+
+{% block title %}Admin - {{ room.code }}{% endblock %}
+
+{% block content %}
+<div class="main tutor">
+  <div class="panel">
+    <div class="section">
+      <div class="row">
+        <h1>Admin - {{ room.description or room.code }}</h1>
+      </div>
+      <div class="row2 url">
+        <span class="url">Message Management</span>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="row">
+        <h2>Messages (<span id="message-count">{{ room.messages|length }}</span>)</h2>
+      </div>
+      <div class="row">
+        <button onclick="refreshMessages()" class="button2">Refresh</button>
+      </div>
+    </div>
+    
+    <div class="row-gap"></div>
+    <div class="section">
+      <div id="messages-container">
+        <!-- Messages will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const roomCode = '{{ room.code }}';
+
+function deleteMessage(messageId, messagePreview) {
+    if (!confirm(`Delete message: "${messagePreview}"?`)) {
+        return;
+    }
+    
+    fetch(`/${roomCode}/delete-message/${messageId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            refreshMessages();
+        } else {
+            alert('Failed to delete message');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting message:', error);
+        alert('Error deleting message');
+    });
+}
+
+function refreshMessages() {
+    fetch(`/${roomCode}/get-messages`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayMessages(data.messages);
+            document.getElementById('message-count').textContent = data.messages.length;
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching messages:', error);
+    });
+}
+
+function displayMessages(messages) {
+    const container = document.getElementById('messages-container');
+    
+    if (messages.length === 0) {
+        container.innerHTML = '<div class="row">No messages yet</div>';
+        return;
+    }
+    
+    // Get first message timestamp as baseline (before reversing)
+    const firstMessageTime = new Date(messages[0].timestamp);
+    
+    let html = '';
+    messages.reverse();    
+    messages.forEach(message => {
+        const timestamp = new Date(message.timestamp).toLocaleTimeString();
+        const messageTime = new Date(message.timestamp);
+        const isSystemMessage = message.learner_id === 'SYSTEM';
+        const messageClass = isSystemMessage ? 'system-message' : 'team-message';
+        
+        // Calculate minutes since first message
+        const minutesSinceFirst = Math.floor((messageTime - firstMessageTime) / (1000 * 60));
+        const timingSuffix = minutesSinceFirst === 0 ? '' : `+${minutesSinceFirst}m`;
+        
+        // Create preview for confirmation dialog (first 50 chars)
+        const messagePreview = message.message.length > 50 
+            ? message.message.substring(0, 50) + '...'
+            : message.message;
+        
+        html += `
+            <div class="message-container ${messageClass}" style="position: relative;">
+                <div class="message-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>${message.learner_name} - ${timestamp}</span>
+                    <div>
+                        <span style="color: #999; font-size: 0.8em; font-weight: normal; margin-right: 10px;">${timingSuffix}</span>
+                        <button onclick="deleteMessage('${message.id}', '${messagePreview.replace(/'/g, "\\'")}')" 
+                                class="button2" 
+                                style="font-size: 0.8em; padding: 2px 8px; background-color: #ff6b6b; color: white;">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+                <div class="message-text">${message.message}</div>
+                <div style="font-size: 0.7em; color: #999; margin-top: 5px;">
+                    ID: ${message.id}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Load messages on page load
+document.addEventListener('DOMContentLoaded', function() {
+    refreshMessages();
+});
+</script>
+{% endblock %}
