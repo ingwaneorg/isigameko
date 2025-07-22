@@ -215,6 +215,25 @@ def inject_message(room_code):
     save_db_json()
     return jsonify({'success': True, 'message': message})
 
+# Add this route to your Flask app
+
+@app.route('/<room_code>/debrief')
+def debrief_page(room_code):
+    # Block any query parameters for security
+    if request.args:
+        return "Forbidden", 403
+    
+    if not validate_room_code(room_code):
+        return "Invalid room code", 400
+        
+    room_code = room_code.upper()
+    
+    if room_code not in rooms:
+        return f"Room {room_code} not found", 404
+    
+    return render_template('debrief.html', 
+                         room=rooms[room_code])
+
 @app.route("/api")
 def block_api_root():
     return "Access to /api is not allowed", 403
