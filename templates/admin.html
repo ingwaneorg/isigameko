@@ -115,6 +115,7 @@ function displayMessages(messages) {
                         </button>
                     </div>
                 </div>
+                ${message.recipient ? `<div class="message-recipient">To: ${message.recipient}</div>` : ''}
                 <div class="message-text">${message.message}</div>
                 <div style="font-size: 0.7em; color: #999; margin-top: 5px;">
                     ID: ${message.id}

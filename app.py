@@ -114,6 +114,7 @@ def send_message(room_code):
         return jsonify({'success': False, 'error': 'Room not found'})
     
     data = request.get_json()
+    recipient = data.get('recipient', '').strip()
     message_text = html.escape(data.get('message', '').strip())
     learner_name = html.escape(data.get('learner_name', '').strip())
     
@@ -140,6 +141,7 @@ def send_message(room_code):
         'id': str(uuid.uuid4()),
         'learner_id': learner_id,
         'learner_name': learner_name or 'Anonymous',
+        'recipient': recipient,
         'message': message_text,
         'timestamp': datetime.now().isoformat()
     }
@@ -206,6 +208,7 @@ def inject_message(room_code):
         'id': str(uuid.uuid4()),
         'learner_id': 'SYSTEM',
         'learner_name': '🚨 INCIDENT UPDATE',
+        'recipient': '',
         'message': message_text,
         'timestamp': datetime.now().isoformat()
     }
