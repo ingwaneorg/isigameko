@@ -125,7 +125,7 @@ def send_message(room_code):
     if len(message_text) > 500:  # Limit message length
         return jsonify({'success': False, 'error': 'Message too long (max 500 characters)'})
     
-    if len(learner_name) > 30:  # Limit learner name length
+    if len(learner_name) > 50:  # Limit learner name length
         return jsonify({'success': False, 'error': 'Name too long (max 30 characters)'})
     
     # Check message limit
