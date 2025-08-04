@@ -6,17 +6,25 @@ import json
 import html
 from datetime import datetime
 
+# Get the version number
+from version import __version__
+
+# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
 # Limit the number of rooms and messages
 MAX_ROOMS = 10
-MAX_MESSAGES_PER_ROOM = 100
+MAX_MESSAGES_PER_ROOM = 10
 
 # In-memory storage
 rooms = {}
 
 def validate_room_code(room_code):
+    # No reserved words
+    if room_code.upper() == 'HEALTH':
+        return False
+
     """Validate room code: only letters, numbers, hyphens, 2-10 characters"""
     return bool(re.match(r'^[A-Za-z0-9-]{2,10}$', room_code))
 
@@ -108,10 +116,10 @@ def send_message(room_code):
     learner_id = get_learner_id()
     
     if not validate_room_code(room_code):
-        return jsonify({'success': False, 'error': 'Invalid room code'})
+        return jsonify({'success': False, 'error': '❌ Invalid room code'})
     
     if room_code not in rooms:
-        return jsonify({'success': False, 'error': 'Room not found'})
+        return jsonify({'success': False, 'error': '❌ Room not found'})
     
     data = request.get_json()
     recipient = data.get('recipient', '').strip()
@@ -126,11 +134,13 @@ def send_message(room_code):
         return jsonify({'success': False, 'error': 'Message too long (max 500 characters)'})
     
     if len(learner_name) > 50:  # Limit learner name length
-        return jsonify({'success': False, 'error': 'Name too long (max 30 characters)'})
+        return jsonify({'success': False, 'error': 'Name too long (max 50 characters)'})
     
     # Check message limit
+    print(len(rooms[room_code]['messages']),MAX_MESSAGES_PER_ROOM)
+
     if len(rooms[room_code]['messages']) >= MAX_MESSAGES_PER_ROOM:
-        return jsonify({'success': False, 'error': 'Room message limit reached'})
+        return jsonify({'success': False, 'error': '❌ Room message limit reached'})
     
     # Store learner name in session
     if learner_name:
@@ -157,10 +167,10 @@ def get_messages(room_code):
     room_code = room_code.upper()
     
     if not validate_room_code(room_code):
-        return jsonify({'success': False, 'error': 'Invalid room code'})
+        return jsonify({'success': False, 'error': '❌ Invalid room code'})
     
     if room_code not in rooms:
-        return jsonify({'success': False, 'error': 'Room not found'})
+        return jsonify({'success': False, 'error': '❌ Room not found'})
     
     return jsonify({
         'success': True, 
@@ -172,10 +182,10 @@ def clear_messages(room_code):
     room_code = room_code.upper()
     
     if not validate_room_code(room_code):
-        return jsonify({'success': False, 'error': 'Invalid room code'})
+        return jsonify({'success': False, 'error': '❌ Invalid room code'})
     
     if room_code not in rooms:
-        return jsonify({'success': False, 'error': 'Room not found'})
+        return jsonify({'success': False, 'error': '❌ Room not found'})
     
     # Clear all messages
     rooms[room_code]['messages'] = []
@@ -189,10 +199,10 @@ def inject_message(room_code):
     room_code = room_code.upper()
     
     if not validate_room_code(room_code):
-        return jsonify({'success': False, 'error': 'Invalid room code'})
+        return jsonify({'success': False, 'error': '❌ Invalid room code'})
     
     if room_code not in rooms:
-        return jsonify({'success': False, 'error': 'Room not found'})
+        return jsonify({'success': False, 'error': '❌ Room not found'})
     
     data = request.get_json()
     message_text = data.get('message', '').strip()
@@ -277,10 +287,10 @@ def delete_message(room_code, message_id):
     room_code = room_code.upper()
     
     if not validate_room_code(room_code):
-        return jsonify({'success': False, 'error': 'Invalid room code'})
+        return jsonify({'success': False, 'error': '❌ Invalid room code'})
     
     if room_code not in rooms:
-        return jsonify({'success': False, 'error': 'Room not found'})
+        return jsonify({'success': False, 'error': '❌ Room not found'})
     
     # Find and remove the message
     messages = rooms[room_code]['messages']
@@ -294,6 +304,17 @@ def delete_message(room_code, message_id):
     
     save_db_json()
     return jsonify({'success': deleted, 'deleted': deleted})
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint."""
+    return jsonify({
+        'rooms'  : f'{len(rooms)}/{MAX_ROOMS}',
+        'service': 'isigameko',
+        'size db': len(json.dumps(rooms).encode("utf-8")),
+        'status' : 'healthy',
+        'version': __version__,
+    })
 
 @app.route('/about')
 def about():
