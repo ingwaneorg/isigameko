@@ -21,10 +21,10 @@
         <input type="text" 
                id="learner-name"
                pattern="[\-A-Za-z0-9 .]+" 
-               title="Only letters, numbers, spaces, dots, and hyphens are allowed (max 50)"
+               title="Only letters, numbers, spaces, dots, and hyphens are allowed (max 100)"
                value="{{ learner_name }}"
                placeholder="Your name and role ~ e.g. Dave (Tech Lead)" 
-               maxlength="50" 
+               maxlength="100" 
                autocomplete="off">
       </div>
     </div>
@@ -35,14 +35,14 @@
         <input type="text" 
                id="recipient" 
                placeholder="Who is your message sent to?" 
-               maxlength="50" 
+               maxlength="100" 
                autocomplete="off">
       </div>
       <div class="row-gap"></div>
       <div class="row">
         <textarea id="message-input" 
                   placeholder="Type your incident update here..." 
-                  maxlength="500" 
+                  maxlength="1000" 
                   rows="5"
                   style="width: 100%; resize: vertical;"></textarea>
       </div>

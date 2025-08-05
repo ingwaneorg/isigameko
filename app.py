@@ -130,11 +130,11 @@ def send_message(room_code):
     if not message_text:
         return jsonify({'success': False, 'error': 'Message cannot be empty'})
     
-    if len(message_text) > 500:  # Limit message length
-        return jsonify({'success': False, 'error': 'Message too long (max 500 characters)'})
+    if len(message_text) > 1000:  # Limit message length
+        return jsonify({'success': False, 'error': 'Message too long (max 1000 characters)'})
     
-    if len(learner_name) > 50:  # Limit learner name length
-        return jsonify({'success': False, 'error': 'Name too long (max 50 characters)'})
+    if len(learner_name) > 100:  # Limit learner name length
+        return jsonify({'success': False, 'error': 'Name too long (max 100 characters)'})
     
     # Check message limit
     print(len(rooms[room_code]['messages']),MAX_MESSAGES_PER_ROOM)
@@ -210,8 +210,8 @@ def inject_message(room_code):
     if not message_text:
         return jsonify({'success': False, 'error': 'Message cannot be empty'})
     
-    if len(message_text) > 500:
-        return jsonify({'success': False, 'error': 'Message too long (max 500 characters)'})
+    if len(message_text) > 1000:
+        return jsonify({'success': False, 'error': 'Message too long (max 1000 characters)'})
     
     # Create system message
     message = {
