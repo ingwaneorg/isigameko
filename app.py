@@ -15,7 +15,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
 # Limit the number of rooms and messages
 MAX_ROOMS = 10
-MAX_MESSAGES_PER_ROOM = 10
+MAX_MESSAGES_PER_ROOM = 100
 
 # In-memory storage
 rooms = {}
