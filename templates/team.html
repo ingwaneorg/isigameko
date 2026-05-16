@@ -21,22 +21,29 @@
         <input type="text" 
                id="learner-name"
                pattern="[\-A-Za-z0-9 .]+" 
-               title="Only letters, numbers, spaces, dots, and hyphens are allowed (max 30)"
+               title="Only letters, numbers, spaces, dots, and hyphens are allowed (max 100)"
                value="{{ learner_name }}"
                placeholder="Your name and role ~ e.g. Dave (Tech Lead)" 
-               maxlength="30" 
+               maxlength="100" 
                autocomplete="off">
       </div>
     </div>
     
-    <div class="section-gap"></div>
-    
     <div class="section">
+      <div class="section-gap"></div>
+      <div class="row5">To: 
+        <input type="text" 
+               id="recipient" 
+               placeholder="Who is your message sent to?" 
+               maxlength="100" 
+               autocomplete="off">
+      </div>
+      <div class="row-gap"></div>
       <div class="row">
         <textarea id="message-input" 
-                  placeholder="Type your incident update here..." 
-                  maxlength="500" 
-                  rows="4"
+                  placeholder="Type your incident update here (max 100 chars) ..." 
+                  maxlength="1000" 
+                  rows="5"
                   style="width: 100%; resize: vertical;"></textarea>
       </div>
 
@@ -73,6 +80,7 @@ const roomCode = '{{ room.code }}';
 
 function sendMessage() {
     const learnerName = document.getElementById('learner-name').value.trim();
+    const recipientName = document.getElementById('recipient').value.trim();
     const messageText = document.getElementById('message-input').value.trim();
 
     // clear previous status
@@ -95,6 +103,7 @@ function sendMessage() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+            recipient: recipientName,
             message: messageText,
             learner_name: learnerName
         })
@@ -102,6 +111,7 @@ function sendMessage() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            document.getElementById('recipient').value = '';
             document.getElementById('message-input').value = '';
             document.getElementById('status-message').textContent = 
                 `Message sent at ${new Date().toLocaleTimeString()}`;
@@ -164,6 +174,7 @@ function displayMessages(messages) {
                 <div class="message-header">
                     ${message.learner_name} - ${timestamp}
                 </div>
+                ${message.recipient ? `<div class="message-recipient">To: ${message.recipient}</div>` : ''}
                 <div class="message-text">${message.message}</div>
             </div>
         `;

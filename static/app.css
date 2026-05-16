@@ -132,6 +132,21 @@ button.button3 {
   margin-top: 5px;
 }
 
+.row5 input[type=text] {
+    width: 50%;
+    font-size: 1.1em;
+    font-family: monospace;
+    text-align: left;
+    border-radius: 0;
+    background-color: field;
+    margin: 0em;
+    border-width: 1px;
+    border-style: solid;
+    border-color: light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
+    padding: 4px;
+    white-space: pre-wrap;    
+}
+
 div.status {
   font-size: 6rem;
   display: flex;
@@ -232,6 +247,12 @@ td {
 .my-message {
   border-left: 4px solid #2196f3;  /* Blue */
   background-color: #f3f8ff;
+}
+
+.message-recipient {
+  font-weight: bold; 
+  font-size: 0.9em; 
+  margin-bottom: 6px;
 }
 
 /* Mobile devices */
