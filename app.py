@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, session
 import uuid
 import re
 import os
 import json
 import html
-from datetime import datetime
+import hmac
+from datetime import datetime, timezone
 
 # Get the version number
 from version import __version__
@@ -13,12 +14,19 @@ from version import __version__
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
+# Shared secret required as a URL suffix for tutor-only routes/actions
+TUTOR_KEY = os.environ.get('TUTOR_KEY', 'dev-key')
+
 # Limit the number of rooms and messages
 MAX_ROOMS = 10
 MAX_MESSAGES_PER_ROOM = 100
 
 # In-memory storage
 rooms = {}
+
+def valid_tutor_key(key):
+    """Constant-time check of the tutor-only URL suffix"""
+    return hmac.compare_digest(key, TUTOR_KEY)
 
 def validate_room_code(room_code):
     # No reserved words
@@ -38,19 +46,6 @@ def get_learner_id():
 @app.route('/')
 def intro():
     return render_template('intro.html')
-
-@app.route('/join', methods=['POST'])
-def join_room():
-    room_code = request.form.get('room_code', '').upper().strip()
-    role = request.form.get('role')  # 'team' or 'tutor'
-    
-    if not room_code or not validate_room_code(room_code):
-        return redirect(url_for('intro'))
-    
-    if role == 'tutor':
-        return redirect(url_for('tutor_page', room_code=room_code))
-    else:
-        return redirect(url_for('team_page', room_code=room_code))
 
 @app.route('/<room_code>')
 def team_page(room_code):
@@ -77,17 +72,20 @@ def team_page(room_code):
                          learner_id=learner_id,
                          learner_name=learner_name)
 
-@app.route('/<room_code>/tutor')
-def tutor_page(room_code):
+@app.route('/<room_code>/tutor/<key>')
+def tutor_page(room_code, key):
+    if not valid_tutor_key(key):
+        return "Not found", 404
+
     # Block any query parameters for security
     if request.args:
         return "Forbidden", 403
-    
+
     if not validate_room_code(room_code):
         return "Invalid room code", 400
-        
+
     room_code = room_code.upper()
-    
+
     # Initialise room if it doesn't exist
     if room_code not in rooms:
         # Limit number of rooms
@@ -98,11 +96,11 @@ def tutor_page(room_code):
             'code': room_code,
             'description': f'Team {room_code}',
             'messages': [],
-            'createdDate': datetime.now().isoformat()
+            'createdDate': datetime.now(timezone.utc).isoformat()
         }
-    
-    return render_template('tutor.html', 
-                         room=rooms[room_code])
+
+    return render_template('tutor.html',
+                         room=rooms[room_code], key=key)
 
 # Save the database if in DEBUG mode
 def save_db_json():
@@ -122,23 +120,24 @@ def send_message(room_code):
         return jsonify({'success': False, 'error': '❌ Room not found'})
     
     data = request.get_json()
-    recipient = data.get('recipient', '').strip()
+    recipient = html.escape(data.get('recipient', '').strip())
     message_text = html.escape(data.get('message', '').strip())
     learner_name = html.escape(data.get('learner_name', '').strip())
-    
+
     # Validate inputs
     if not message_text:
         return jsonify({'success': False, 'error': 'Message cannot be empty'})
-    
+
     if len(message_text) > 1000:  # Limit message length
         return jsonify({'success': False, 'error': 'Message too long (max 1000 characters)'})
-    
+
     if len(learner_name) > 100:  # Limit learner name length
         return jsonify({'success': False, 'error': 'Name too long (max 100 characters)'})
-    
-    # Check message limit
-    print(len(rooms[room_code]['messages']),MAX_MESSAGES_PER_ROOM)
 
+    if len(recipient) > 100:  # Limit recipient length
+        return jsonify({'success': False, 'error': 'Recipient too long (max 100 characters)'})
+
+    # Check message limit
     if len(rooms[room_code]['messages']) >= MAX_MESSAGES_PER_ROOM:
         return jsonify({'success': False, 'error': '❌ Room message limit reached'})
     
@@ -153,7 +152,7 @@ def send_message(room_code):
         'learner_name': learner_name or 'Anonymous',
         'recipient': recipient,
         'message': message_text,
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now(timezone.utc).isoformat()
     }
     
     # Add to room
@@ -177,10 +176,13 @@ def get_messages(room_code):
         'messages': rooms[room_code]['messages']
     })
 
-@app.route('/<room_code>/clear-messages', methods=['POST'])
-def clear_messages(room_code):
+@app.route('/<room_code>/clear-messages/<key>', methods=['POST'])
+def clear_messages(room_code, key):
+    if not valid_tutor_key(key):
+        return jsonify({'success': False, 'error': 'Not found'}), 404
+
     room_code = room_code.upper()
-    
+
     if not validate_room_code(room_code):
         return jsonify({'success': False, 'error': '❌ Invalid room code'})
     
@@ -193,11 +195,14 @@ def clear_messages(room_code):
     save_db_json()
     return jsonify({'success': True})
 
-@app.route('/<room_code>/inject-message', methods=['POST'])
-def inject_message(room_code):
+@app.route('/<room_code>/inject-message/<key>', methods=['POST'])
+def inject_message(room_code, key):
     """Tutor can inject pressure messages during the exercise"""
+    if not valid_tutor_key(key):
+        return jsonify({'success': False, 'error': 'Not found'}), 404
+
     room_code = room_code.upper()
-    
+
     if not validate_room_code(room_code):
         return jsonify({'success': False, 'error': '❌ Invalid room code'})
     
@@ -220,7 +225,7 @@ def inject_message(room_code):
         'learner_name': '🚨 INCIDENT UPDATE',
         'recipient': '',
         'message': message_text,
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now(timezone.utc).isoformat()
     }
     
     rooms[room_code]['messages'].append(message)
@@ -230,21 +235,24 @@ def inject_message(room_code):
 
 # Add this route to your Flask app
 
-@app.route('/<room_code>/debrief')
-def debrief_page(room_code):
+@app.route('/<room_code>/debrief/<key>')
+def debrief_page(room_code, key):
+    if not valid_tutor_key(key):
+        return "Not found", 404
+
     # Block any query parameters for security
     if request.args:
         return "Forbidden", 403
-    
+
     if not validate_room_code(room_code):
         return "Invalid room code", 400
-        
+
     room_code = room_code.upper()
-    
+
     if room_code not in rooms:
         return f"Room {room_code} not found", 404
-    
-    return render_template('debrief.html', 
+
+    return render_template('debrief.html',
                          room=rooms[room_code])
 
 @app.route("/api")
@@ -265,27 +273,33 @@ def api_rooms():
 
     return jsonify(room_summaries)
 
-@app.route('/<room_code>/admin')
-def admin_page(room_code):
+@app.route('/<room_code>/admin/<key>')
+def admin_page(room_code, key):
+    if not valid_tutor_key(key):
+        return "Not found", 404
+
     # Block any query parameters for security
     if request.args:
         return "Forbidden", 403
-    
+
     if not validate_room_code(room_code):
         return "Invalid room code", 400
-        
+
     room_code = room_code.upper()
-    
+
     if room_code not in rooms:
         return f"Room {room_code} not found", 404
-    
-    return render_template('admin.html', 
-                         room=rooms[room_code])
 
-@app.route('/<room_code>/delete-message/<message_id>', methods=['POST'])
-def delete_message(room_code, message_id):
+    return render_template('admin.html',
+                         room=rooms[room_code], key=key)
+
+@app.route('/<room_code>/delete-message/<key>/<message_id>', methods=['POST'])
+def delete_message(room_code, key, message_id):
+    if not valid_tutor_key(key):
+        return jsonify({'success': False, 'error': 'Not found'}), 404
+
     room_code = room_code.upper()
-    
+
     if not validate_room_code(room_code):
         return jsonify({'success': False, 'error': '❌ Invalid room code'})
     

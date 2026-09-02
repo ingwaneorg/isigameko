@@ -68,6 +68,7 @@
 {% block scripts %}
 <script>
 const roomCode = '{{ room.code }}';
+const tutorKey = '{{ key }}';
 
 function injectMessage() {
     const messageText = document.getElementById('inject-message').value.trim();
@@ -84,7 +85,7 @@ function injectMessage() {
     document.getElementById('inject-button').disabled = true;
     document.getElementById('inject-button').textContent = 'Sending...';
     
-    fetch(`/${roomCode}/inject-message`, {
+    fetch(`/${roomCode}/inject-message/${tutorKey}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -120,7 +121,7 @@ function clearMessages() {
         return;
     }
     
-    fetch(`/${roomCode}/clear-messages`, {
+    fetch(`/${roomCode}/clear-messages/${tutorKey}`, {
         method: 'POST'
     })
     .then(response => response.json())

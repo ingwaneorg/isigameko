@@ -1,5 +1,6 @@
-<!-- templates/intro.html -->
+<!-- templates/about.html -->
 {% extends "base.html" %}
+{% block title %}About{% endblock %}
 {% block content %}
 <div class="main intro">
   <div class="panel">
@@ -11,10 +12,10 @@
     <div class="section-gap"></div>
     <div class="section">
       <div class="row3">
-        <div>This page isn't part of the exercise.</div>
+        <p>If you can see this page, this domain is <strong>not blocked</strong> on your network - you're good to use it for the exercise.</p>
       </div>
       <div class="row3">
-        <div style="font-size: 0.9em; color: #555;">If you're a learner, use the link your tutor gave you.</div>
+        <p>If this page doesn't load for you, the domain is likely blocked. Use the provided VM instead.</p>
       </div>
     </div>
   </div>

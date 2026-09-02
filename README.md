@@ -44,9 +44,9 @@ isigameko/
 ## Usage
 
 ### Setting Up an Exercise
-1. **Create room**: Tutor visits `/` and creates a unique room code
-2. **Get tutor URL**: Click "I'm the tutor" to access `/ROOMCODE/tutor`
-3. **Share team URL**: Give teams the URL `/ROOMCODE`
+1. **Create room**: Tutor visits `/ROOMCODE/tutor/TUTOR_KEY` directly - this creates the room if it doesn't exist. `TUTOR_KEY` is a shared secret set via the `TUTOR_KEY` env var (see `bin/deploy.sh`); wrong or missing key returns a plain 404
+2. **Share team URL**: Give teams the URL `/ROOMCODE` directly (e.g. in a breakout room) - `/` is not a discovery page and has no room-creation form
+3. **Tutor-only pages**: `/ROOMCODE/debrief/TUTOR_KEY` and `/ROOMCODE/admin/TUTOR_KEY` use the same key
 
 ### During Training
 1. **Teams join**: Team members enter their name/role and start messaging
