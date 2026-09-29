@@ -30,7 +30,7 @@ def valid_tutor_key(key):
 
 def validate_room_code(room_code):
     # No reserved words
-    if room_code.upper() == 'HEALTH':
+    if room_code.upper() in ('HEALTH', 'TEST'):
         return False
 
     """Validate room code: only letters, numbers, hyphens, 2-10 characters"""
@@ -53,14 +53,14 @@ def team_page(room_code):
     if request.args:
         return "Forbidden", 403
     
+    # Generic 404 for bad or unknown codes - looks like any other missing page
     if not validate_room_code(room_code):
-        return "Invalid room code", 400
+        return "Page not found", 404
         
     room_code = room_code.upper()
     
-    # Show 404 error if tutor hasn't created the room
     if room_code not in rooms:
-        return "Room not found", 404
+        return "Page not found", 404
 
     learner_id = get_learner_id()
     
@@ -235,11 +235,10 @@ def inject_message(room_code, key):
 
 # Add this route to your Flask app
 
-@app.route('/<room_code>/debrief/<key>')
-def debrief_page(room_code, key):
-    if not valid_tutor_key(key):
-        return "Not found", 404
-
+@app.route('/<room_code>/debrief')
+def debrief_page(room_code):
+    # No tutor key - read-only, shows the same messages as /get-messages,
+    # and is screen-shared so the key would be visible in the address bar
     # Block any query parameters for security
     if request.args:
         return "Forbidden", 403
@@ -330,9 +329,9 @@ def health_check():
         'version': __version__,
     })
 
-@app.route('/about')
-def about():
-    return render_template('about.html')
+@app.route('/test')
+def test():
+    return render_template('test.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

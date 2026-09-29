@@ -5,7 +5,7 @@ A Flask-based incident response communication system for training teams in crisi
 ## Features
 - 💬 Team-based messaging with individual identification
 - 🚨 Tutor message injection for escalating scenarios
-- ⏱️ Timing analysis for debrief (tutor view only)
+- ⏱️ Timing analysis for debrief
 - 🎯 Room-based sessions with secure room codes
 - 📱 Clean mobile-responsive interface
 - 🔄 Manual refresh system (no continuous polling)
@@ -46,7 +46,8 @@ isigameko/
 ### Setting Up an Exercise
 1. **Create room**: Tutor visits `/ROOMCODE/tutor/TUTOR_KEY` directly - this creates the room if it doesn't exist. `TUTOR_KEY` is a shared secret set via the `TUTOR_KEY` env var (see `bin/deploy.sh`); wrong or missing key returns a plain 404
 2. **Share team URL**: Give teams the URL `/ROOMCODE` directly (e.g. in a breakout room) - `/` is not a discovery page and has no room-creation form
-3. **Tutor-only pages**: `/ROOMCODE/debrief/TUTOR_KEY` and `/ROOMCODE/admin/TUTOR_KEY` use the same key
+3. **Tutor-only pages**: `/ROOMCODE/admin/TUTOR_KEY` uses the same key
+4. **Debrief**: `/ROOMCODE/debrief` needs no key - it's read-only and safe to screen-share
 
 ### During Training
 1. **Teams join**: Team members enter their name/role and start messaging
