@@ -64,6 +64,8 @@ isigameko/
 - **Timing data**: Tutor sees "+Xm" relative to first message
 - **Communication patterns**: Identify response delays and coordination issues
 - **Copy messages**: Select and copy all messages for detailed post-exercise analysis
+- **Save the debrief**: Open `/ROOMCODE/debrief`, print, and choose the destination **"Save as PDF"** (Chrome/Edge). Do not use "Microsoft Print to PDF" - it turns the text into shapes, so it can't be selected, copied or searched
+- **Save before clearing**: Messages are held in memory only, so they are lost when messages are cleared or the app restarts / scales to zero
 - **Clear messages**: Reset between scenarios
 
 ## Training Scenarios
